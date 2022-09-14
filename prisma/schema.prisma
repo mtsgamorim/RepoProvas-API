@@ -1,0 +1,62 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id                      Int        @id @default(autoincrement())
+  email                   String     @unique
+  password                String
+}
+
+model categories {
+  id                      Int        @id @default(autoincrement())
+  name                    String     @unique
+  tests                   tests[]
+}
+
+model terms {
+  id                      Int        @id @default(autoincrement())   
+  number                  Int        @unique 
+  disciplines             disciplines[]
+}
+
+model teachers {
+  id                      Int        @id @default(autoincrement())
+  name                    String     @unique
+  teachersDisciplines     teachersDisciplines[]
+}
+
+model disciplines {
+  id                      Int         @id @default(autoincrement())
+  name                    String      @unique
+  term                    terms       @relation(fields: [termId], references: [id])
+  termId                  Int
+  teachersDisciplines     teachersDisciplines[]
+}
+
+model teachersDisciplines {
+  id                      Int         @id @default(autoincrement())
+  teacher                 teachers    @relation(fields: [teacherId], references: [id])
+  teacherId               Int
+  discipline              disciplines @relation(fields: [disciplineId], references: [id])
+  disciplineId            Int
+  tests                   tests[]
+}
+
+model tests {
+  id                      Int                     @id @default(autoincrement())
+  name                    String
+  pdfUrl                  String
+  category                categories              @relation(fields: [categoryId], references: [id])
+  categoryId              Int     
+  teacherDiscipline       teachersDisciplines     @relation(fields: [teacherDisciplineId], references: [id])
+  teacherDisciplineId     Int
+}
