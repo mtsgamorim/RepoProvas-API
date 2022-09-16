@@ -49,16 +49,18 @@ export async function getAllTestsGroupedDiscipline(token: string) {
             return {
               id: category.id,
               name: category.name,
-              tests: category.tests.map((test) => {
-                if (test.teacherDiscipline.discipline.id === discipline.id) {
-                  return {
-                    id: test.id,
-                    name: test.name,
-                    pdfUrl: test.pdfUrl,
-                    teacher: test.teacherDiscipline.teacher.name,
-                  };
-                }
-              }),
+              tests: category.tests
+                .map((test) => {
+                  if (test.teacherDiscipline.discipline.id === discipline.id) {
+                    return {
+                      id: test.id,
+                      name: test.name,
+                      pdfUrl: test.pdfUrl,
+                      teacher: test.teacherDiscipline.teacher.name,
+                    };
+                  }
+                })
+                .filter((test) => test),
             };
           }),
         };
@@ -85,16 +87,18 @@ export async function getAllTestsGroupedTeacher(token: string) {
         return {
           id: category.id,
           name: category.name,
-          tests: category.tests.map((test) => {
-            if (test.teacherDiscipline.teacher.id === teacher.id) {
-              return {
-                testId: test.id,
-                testName: test.name,
-                pdfUrl: test.pdfUrl,
-                discipline: test.teacherDiscipline.discipline.name,
-              };
-            }
-          }),
+          tests: category.tests
+            .map((test) => {
+              if (test.teacherDiscipline.teacher.id === teacher.id) {
+                return {
+                  testId: test.id,
+                  testName: test.name,
+                  pdfUrl: test.pdfUrl,
+                  discipline: test.teacherDiscipline.discipline.name,
+                };
+              }
+            })
+            .filter((test) => test),
         };
       }),
     };
