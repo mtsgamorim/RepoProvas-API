@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { createTest } from "../controllers/testsControllers";
+import {
+  createTest,
+  getAllTestsGroupedDiscipline,
+  getAllTestsGroupedTeacher,
+} from "../controllers/testsControllers";
 import validateSchema from "../middlewares/schemaValidator";
 import validateTokenExists from "../middlewares/validateTokenExists";
 import testSchema from "../schemas/testSchema";
@@ -12,5 +16,13 @@ router.post(
   validateSchema(testSchema),
   createTest
 );
+
+router.get(
+  "/tests/discipline",
+  validateTokenExists,
+  getAllTestsGroupedDiscipline
+);
+
+router.get("/tests/teacher", validateTokenExists, getAllTestsGroupedTeacher);
 
 export default router;

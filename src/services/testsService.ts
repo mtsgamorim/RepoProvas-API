@@ -1,4 +1,5 @@
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
+import { terms, categories, tests } from "@prisma/client";
 import * as categoryRepositories from "../repositories/categoriesRepositories";
 import * as userRepositories from "../repositories/userRepositories";
 import * as teacherRepositories from "../repositories/teachersRepositories";
@@ -25,7 +26,80 @@ export async function createTest(token: string, test: testCreate) {
     categoryId,
     teacherDisciplineId,
   };
-  await testsRepositories.postTeacher(data);
+  await testsRepositories.postTest(data);
+}
+
+export async function getAllTestsGroupedDiscipline(token: string) {
+  const user = await verifyToken(token);
+  if (!user) {
+    throw { type: "unauthorized", message: "Token inválido" };
+  }
+  const terms = await testsRepositories.getAllTerms();
+  const categories = await categoryRepositories.getAllCategories();
+
+  const data = terms.map((term) => {
+    return {
+      termId: term.id,
+      termNumber: term.number,
+      disciplines: term.disciplines.map((discipline) => {
+        return {
+          id: discipline.id,
+          name: discipline.name,
+          categories: categories.map((category) => {
+            return {
+              id: category.id,
+              name: category.name,
+              tests: category.tests.map((test) => {
+                if (test.teacherDiscipline.discipline.id === discipline.id) {
+                  return {
+                    id: test.id,
+                    name: test.name,
+                    pdfUrl: test.pdfUrl,
+                    teacher: test.teacherDiscipline.teacher.name,
+                  };
+                }
+              }),
+            };
+          }),
+        };
+      }),
+    };
+  });
+
+  return data;
+}
+
+export async function getAllTestsGroupedTeacher(token: string) {
+  const user = await verifyToken(token);
+  if (!user) {
+    throw { type: "unauthorized", message: "Token inválido" };
+  }
+  const teachers = await teacherRepositories.getAllTeachers();
+  const categories = await categoryRepositories.getAllCategories();
+
+  const data = teachers.map((teacher) => {
+    return {
+      teacherId: teacher.id,
+      teacherName: teacher.name,
+      categories: categories.map((category) => {
+        return {
+          id: category.id,
+          name: category.name,
+          tests: category.tests.map((test) => {
+            if (test.teacherDiscipline.teacher.id === teacher.id) {
+              return {
+                testId: test.id,
+                testName: test.name,
+                pdfUrl: test.pdfUrl,
+                discipline: test.teacherDiscipline.discipline.name,
+              };
+            }
+          }),
+        };
+      }),
+    };
+  });
+  return data;
 }
 
 async function verifyToken(token: string) {

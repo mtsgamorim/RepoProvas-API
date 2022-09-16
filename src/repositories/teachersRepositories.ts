@@ -8,3 +8,13 @@ export async function getTeacherbyName(name: string) {
   });
   return teacher;
 }
+
+export async function getAllTeachers() {
+  const teacher = await client.teachers.findMany({
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+  return teacher;
+}
