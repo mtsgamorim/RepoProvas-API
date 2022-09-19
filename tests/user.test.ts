@@ -1,5 +1,5 @@
 import supertest from "supertest";
-import { userFactory, createUserFactory } from "./factory/user";
+import { userFactory, createUserFactory } from "./factory/userFactory";
 import { faker } from "@faker-js/faker";
 import app from "../src/app";
 import client from "../src/db/prismaClient";
@@ -13,7 +13,7 @@ afterAll(() => {
   client.$disconnect;
 });
 
-describe("/sign-up", () => {
+describe("POST: /sign-up", () => {
   it("Caso sucesso: Retornar code 201", async () => {
     const user = createUserFactory();
     const result = await supertest(app).post("/sign-up").send(user);
@@ -55,7 +55,7 @@ describe("/sign-up", () => {
   });
 });
 
-describe("/sign-in", () => {
+describe("POST: /sign-in", () => {
   it("Caso sucesso: retornar status 200 e um token", async () => {
     const user = userFactory();
     await client.users.create({
@@ -66,9 +66,10 @@ describe("/sign-in", () => {
     });
     const result = await supertest(app).post("/sign-in").send(user);
     const status = result.status;
-    const body = result.body;
+    const token = result.body;
     expect(status).toEqual(200);
-    expect(body).toBeInstanceOf(Object);
+    expect(token).toBeInstanceOf(Object);
+    expect(token).not.toBe(null);
   });
 
   it("Caso erro: Usuario não cadastrado, retornar status 401", async () => {
