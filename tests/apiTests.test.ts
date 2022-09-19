@@ -4,6 +4,7 @@ import { faker } from "@faker-js/faker";
 import app from "../src/app";
 import client from "../src/db/prismaClient";
 import bcrypt from "bcrypt";
+import { testFactory } from "./factory/testsFactory";
 
 beforeEach(async () => {
   await client.$executeRaw`TRUNCATE TABLE users;`;
@@ -12,6 +13,19 @@ beforeEach(async () => {
 afterAll(() => {
   client.$disconnect;
 });
+
+async function getToken() {
+  const user = userFactory();
+  await client.users.create({
+    data: {
+      email: user.email,
+      password: bcrypt.hashSync(user.password, 10),
+    },
+  });
+  const { body } = await supertest(app).post("/sign-in").send(user);
+  const token = body.token;
+  return token;
+}
 
 describe("POST: /sign-up", () => {
   it("Caso sucesso: Retornar code 201", async () => {
@@ -99,5 +113,84 @@ describe("POST: /sign-in", () => {
     const result = await supertest(app).post("/sign-in").send(user);
     const status = result.status;
     expect(status).toEqual(422);
+  });
+});
+
+describe("POST: /tests", () => {
+  it("Caso sucesso: retornar status code 201", async () => {
+    const test = testFactory();
+    const token = await getToken();
+    const result = await supertest(app)
+      .post("/tests")
+      .set("Authorization", "Bearer " + token)
+      .send(test);
+    const status = result.status;
+    expect(status).toEqual(201);
+  });
+
+  it("Caso erro: token não enviado, retornar status 401", async () => {
+    const test = testFactory();
+    const result = await supertest(app).post("/tests").send(test);
+    const status = result.status;
+    expect(status).toEqual(401);
+  });
+
+  it("Caso erro: token inválido, retornar status 401", async () => {
+    const test = testFactory();
+    const token = faker.lorem.word();
+    const result = await supertest(app)
+      .post("/tests")
+      .set("Authorization", "Bearer " + token)
+      .send(test);
+    const status = result.status;
+    expect(status).toEqual(401);
+  });
+
+  it("Caso erro: Categoria não existe, retornar status 404", async () => {
+    const test = testFactory();
+    test.category = faker.lorem.word();
+    const token = await getToken();
+    const result = await supertest(app)
+      .post("/tests")
+      .set("Authorization", "Bearer " + token)
+      .send(test);
+    const status = result.status;
+    expect(status).toEqual(404);
+  });
+
+  it("Caso erro: Disciplina não existe, retornar status 404", async () => {
+    const test = testFactory();
+    test.discipline = faker.lorem.word();
+    const token = await getToken();
+    const result = await supertest(app)
+      .post("/tests")
+      .set("Authorization", "Bearer " + token)
+      .send(test);
+    const status = result.status;
+    expect(status).toEqual(404);
+  });
+
+  it("Caso erro: Professor não existe, retornar status 404", async () => {
+    const test = testFactory();
+    test.teacher = faker.lorem.word();
+    const token = await getToken();
+    const result = await supertest(app)
+      .post("/tests")
+      .set("Authorization", "Bearer " + token)
+      .send(test);
+    const status = result.status;
+    expect(status).toEqual(404);
+  });
+
+  it("Caso erro: Professor não da aula para essa categoria, retornar status 404", async () => {
+    const test = testFactory();
+    test.teacher = "Bruna Hamori";
+    const token = await getToken();
+    const result = await supertest(app)
+      .post("/tests")
+      .set("Authorization", "Bearer " + token)
+      .send(test);
+    const status = result.status;
+    expect(status).toEqual(400);
   });
 });

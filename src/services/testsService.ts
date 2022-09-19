@@ -151,7 +151,7 @@ async function getTeacherDisciplineId(disciplineId: number, teacherId: number) {
     });
   if (!teacherDiscipline) {
     throw {
-      type: "notFound",
+      type: "badRequest",
       message: "Professor não da aula desta disciplina",
     };
   }
